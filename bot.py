@@ -41,13 +41,14 @@ async def on_message(message):
     print(f"Message from {message.author}: {message.content}")
     await bot.process_commands(message)
 
+
 # DIGEST
 @bot.command(name="digest")
 async def digest(ctx):
     titles  = "\n".join(bot.newsCrawler.getTitles())
-    rates   = bot.exchangeHandler.getRates()
+    rates   = "\n".join(bot.exchangeHandler.getRates())
     weather = bot.weatherHandler.getWeather()
-    await ctx.send(f"{titles}\n{rates[0]}\n{weather}")
+    await ctx.send(f"{titles}\n{rates}\n{weather}")
 
 
 # NEWS
@@ -64,5 +65,12 @@ async def newsArticle(ctx, arg):
     embed = discord.Embed(title=f"{article.title}", url=f"{article.link}", description=f"{article.intro}")
     embed.set_thumbnail(url=f"{article.thumb}")
     await ctx.send(embed=embed)
+
+
+# EXCHANGE
+@bot.command(name="rates")
+async def rates(ctx):
+    return
+
 
 bot.run(f"{bot.TOKEN}", log_handler=handler, log_level=logging.DEBUG)
