@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 DEFAULT_CURRENCIES = ["EUR", "USD"]
 
-class ExchangeRates():
+class ExchangeHandler():
     def __init__(self):
         self.currencies = {}
         self.URL = "https://bnro.ro/Cursul-de-schimb-524.aspx"
@@ -19,23 +19,42 @@ class ExchangeRates():
         self.followedCurrencies = DEFAULT_CURRENCIES
 
 
-    def addFollowedCurrencies(self, currencies: list) -> None:
+    def addFollowedCurrencies(self, currencies: tuple) -> bool:
+        print(currencies)
         for currency in currencies:
             if currency in self.currencies and currency not in self.followedCurrencies:
                 self.followedCurrencies.append(currency)
+            else:
+                return False
+        return True
 
-    def removeFollowedCurrencies(self, currencies: list) -> None:
+
+    def removeFollowedCurrencies(self, currencies: tuple) -> bool:
         for currency in currencies:
             if currency in self.followedCurrencies:
                 self.followedCurrencies.remove(currency)
+            else:
+                return False
+        return True
 
             
-    def getRates(self):
+    def getRates(self) -> list:
         rates = []
         for currency in self.followedCurrencies:
             feed = feedparser.parse(f"https://bnro.ro/{self.currencies[currency]}")
             rates.append(feed.entries[0].title[:18].strip())
         return rates
 
-e = ExchangeRates()
-e.getRates()
+
+    def getDigestRate(self) -> str:
+        return feedparser.parse(f"https://bnro.ro/{self.currencies[self.followedCurrencies[0]]}").entries[0].title[:18].strip()
+
+
+    def getCurrencies(self) -> list:
+        currencies = []
+        for currency in self.currencies:
+            if currency in self.followedCurrencies:
+                currencies.append(f"{currency}*")
+            else:
+                currencies.append(currency)
+        return currencies

@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 import logging
 from news import NewsCrawler
-from exchange import ExchangeRates
+from exchange import ExchangeHandler
 from weather import WeatherHandler
 
 
@@ -19,7 +19,7 @@ class DigestBot(commands.Bot):
         super().__init__(command_prefix="+", intents=intents)
         self.MAX_ARTICLES = 20
         self.newsCrawler = NewsCrawler()
-        self.exchangeHandler = ExchangeRates()
+        self.exchangeHandler = ExchangeHandler()
         self.weatherHandler = WeatherHandler()
 
     def update(self) -> None:
@@ -43,12 +43,13 @@ async def on_message(message):
 
 
 # DIGEST
+# TODO: make digest an embed
 @bot.command(name="digest")
 async def digest(ctx):
     titles  = "\n".join(bot.newsCrawler.getTitles())
-    rates   = "\n".join(bot.exchangeHandler.getRates())
+    rate    = bot.exchangeHandler.getDigestRate()
     weather = bot.weatherHandler.getWeather()
-    await ctx.send(f"{titles}\n{rates}\n{weather}")
+    await ctx.send(f"{titles}\n{rate}\n{weather}")
 
 
 # NEWS
@@ -70,7 +71,29 @@ async def newsArticle(ctx, arg):
 # EXCHANGE
 @bot.command(name="rates")
 async def rates(ctx):
-    return
+    await ctx.send("\n".join(bot.exchangeHandler.getRates()))
+
+@bot.command(name="c_list")
+async def currencies(ctx) -> None:
+    await ctx.send("\n".join(bot.exchangeHandler.getCurrencies()))
+
+@bot.command(name="c_add")
+async def addCurrencies(ctx, *args) -> None:
+    response = ""
+    if bot.exchangeHandler.addFollowedCurrencies(args):
+        response = f"Added {', '.join(args)} to followed currencies"
+    else:
+        response = "Error: currency not in list"
+    await ctx.send(response)
+
+@bot.command(name="c_remove")
+async def removeCurrencies(ctx, *args) -> None:
+    response = ""
+    if bot.exchangeHandler.removeFollowedCurrencies(args):
+        response = f"Removed {', '.join(args)} from followed currencies"
+    else:
+        response = "Error: currency not in list"
+    await ctx.send(response)
 
 
 bot.run(f"{bot.TOKEN}", log_handler=handler, log_level=logging.DEBUG)
